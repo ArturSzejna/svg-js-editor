@@ -1,25 +1,25 @@
-import logo from './logo.svg';
 import './App.css';
+import SvgEdytor from "./components/svg-edytor";
+import Toolbar from "./components/ui/toolbar";
+import WorkingField from "./components/ui/working-field";
+import InfoPanel from "./components/ui/info-panel";
+import {useEffect, useState} from "react";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    const [activeTool, setActiveTool] = useState(null);
+
+    useEffect(() => {
+        console.log(activeTool);
+    }, [activeTool])
+
+    return (
+        <SvgEdytor>
+            <Toolbar activeTool={activeTool} click={tool => setActiveTool(tool)}/>
+            <WorkingField activeTool={activeTool} width={650} height={650}/>
+            <InfoPanel />
+        </SvgEdytor>
+    );
 }
 
 export default App;
