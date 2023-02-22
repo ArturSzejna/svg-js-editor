@@ -1,6 +1,5 @@
 import {useEffect, useRef, useState} from "react";
 import {SVG} from "@svgdotjs/svg.js";
-import Snap from "snapsvg-cjs";
 
 const WorkingField = (props) => {
 
@@ -25,14 +24,14 @@ const WorkingField = (props) => {
                 stroke: "rgba(121,190,215,0.5)",
                 id: 'editElement-rect',
                 class: 'rect'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const line = svg.line(bbox.x + bbox.width, bbox.y + bbox.height / 2, bbox.x + bbox.width + 25, bbox.y + bbox.height / 2).attr({
                 stroke: 'rgba(121,190,215,0.5)',
                 strokeWidth: 1,
                 id: 'editElement-line',
                 class: 'line'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const rotateCircle = svg.circle(r + 2).move(bbox.x - r / 2 - 1 + bbox.width + 25, bbox.y - r / 2 - 1 + bbox.height / 2).attr({
                 fill: "#ffffff",
@@ -40,7 +39,7 @@ const WorkingField = (props) => {
                 cursor: "grab",
                 id: 'editElement-rotate',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2 + bbox.height / 2).attr({
                 fill: "#ffffff",
@@ -48,7 +47,7 @@ const WorkingField = (props) => {
                 cursor: "e-resize",
                 id: 'editElement-east',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - 4 + bbox.height / 2).attr({
                 fill: "#ffffff",
@@ -56,7 +55,7 @@ const WorkingField = (props) => {
                 cursor: "e-resize",
                 id: 'editElement-west',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editUp = svg.circle(r).move(bbox.x - r / 2 + bbox.width / 2, bbox.y - r / 2).attr({
                 fill: "#ffffff",
@@ -64,7 +63,7 @@ const WorkingField = (props) => {
                 cursor: "n-resize",
                 id: 'editElement-north',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editBottom = svg.circle(r).move(bbox.x - r / 2 + bbox.width / 2, bbox.y - r / 2 + bbox.height).attr({
                 fill: "#ffffff",
@@ -72,7 +71,7 @@ const WorkingField = (props) => {
                 cursor: "n-resize",
                 id: 'editElement-south',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editCornerUpLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - r / 2).attr({
                 fill: "#e3e3e3",
@@ -80,7 +79,7 @@ const WorkingField = (props) => {
                 cursor: "nw-resize",
                 id: 'editElement-circle6',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editCornerUpRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2).attr({
                 fill: "#e3e3e3",
@@ -88,7 +87,7 @@ const WorkingField = (props) => {
                 cursor: "sw-resize",
                 id: 'editElement-circle7',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editCornerBottomLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - r / 2 + bbox.height).attr({
                 fill: "#e3e3e3",
@@ -96,7 +95,7 @@ const WorkingField = (props) => {
                 cursor: "sw-resize",
                 id: 'editElement-circle8',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
             const editCornerBottomRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2 + bbox.height).attr({
                 fill: "#e3e3e3",
@@ -104,7 +103,7 @@ const WorkingField = (props) => {
                 cursor: "nw-resize",
                 id: 'editElement-circle9',
                 class: 'circle'
-            }).rotate(element.transform().rotate, bbox.cx, bbox.cy);
+            }).transform(element.transform());
 
         }
         const deleteAllEditElements = () => {
@@ -195,6 +194,15 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementEdit');
                     const bbox = element.bbox();
 
+                    const tx = bbox.x + bbox.width / 2;
+                    const ty = bbox.y + bbox.height / 2;
+
+                    const x2 = event.offsetX;
+                    const y2 = event.offsetY;
+
+                    let calk = 180 / Math.PI * Math.atan((ty - y2) / (tx - x2));
+                    const deg = (tx - x2 < 0) ? calk : calk + 180;
+
                     const x = event.offsetX-bbox.width/2;
                     const y = event.offsetY-bbox.height/2;
 
@@ -233,6 +241,7 @@ const WorkingField = (props) => {
                     svg.remember('elementRotate', null);
                     deleteAllEditElements()
                     createEditElementByElement(activeElement, 8)
+                    console.log(activeElement.bbox(), activeElement.transform());
                 }
                 if (svg.remember('elementEdit')) {
                     const element = svg.remember('elementEdit');
@@ -242,6 +251,7 @@ const WorkingField = (props) => {
                     svg.remember('elementEdit', null);
                     deleteAllEditElements()
                     createEditElementByElement(activeElement, 8)
+                    console.log(activeElement.bbox(), activeElement.transform());
                 }
                 // if (svg.remember('elementEast')) {
                 //     const element = svg.remember('elementEast');
