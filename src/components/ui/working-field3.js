@@ -179,34 +179,18 @@ const WorkingField = (props) => {
                 if (svg.remember('elementRotate')) {
                     const element = svg.remember('elementRotate');
                     const bbox = element.bbox();
-                    const tx = bbox.x + bbox.width / 2;
-                    const ty = bbox.y + bbox.height / 2;
 
-                    const x2 = event.offsetX;
-                    const y2 = event.offsetY;
-
-                    let calk = 180 / Math.PI * Math.atan((ty - y2) / (tx - x2));
-                    const deg = (tx - x2 < 0) ? calk : calk + 180;
+                    let calk = 180 / Math.PI * Math.atan((bbox.cy - event.offsetY) / (bbox.cx - event.offsetX));
+                    const deg = (bbox.cx - event.offsetX < 0) ? calk : calk + 180;
 
                     element.rotate(-element.transform().rotate + deg);
+                    console.log(bbox, element.rbox());
                 }
                 if (svg.remember('elementEdit')) {
                     const element = svg.remember('elementEdit');
-                    const bbox = element.bbox();
 
-                    const tx = bbox.x + bbox.width / 2;
-                    const ty = bbox.y + bbox.height / 2;
-
-                    const x2 = event.offsetX;
-                    const y2 = event.offsetY;
-
-                    let calk = 180 / Math.PI * Math.atan((ty - y2) / (tx - x2));
-                    const deg = (tx - x2 < 0) ? calk : calk + 180;
-
-                    const x = event.offsetX-bbox.width/2;
-                    const y = event.offsetY-bbox.height/2;
-
-                    element.move(x, y);
+                    element.center(event.offsetX, event.offsetY);
+                    console.log(element.attr());
                 }
                 // if (svg.remember('elementEast')) {
                 //     const element = svg.remember('elementEast');
