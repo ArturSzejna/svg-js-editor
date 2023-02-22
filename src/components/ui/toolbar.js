@@ -2,7 +2,7 @@ import Button from "./buttons";
 
 import {BsCircle, BsCursor} from 'react-icons/bs';
 import {FaDrawPolygon} from 'react-icons/fa';
-import {BiRectangle} from "react-icons/bi";
+import {BiRectangle, BiMove} from "react-icons/bi";
 
 const Toolbar = (props) => {
 
@@ -12,6 +12,11 @@ const Toolbar = (props) => {
                 active={props.activeTool === "cursor"}
                 click={() => props.click(props.activeTool !== "cursor" ? "cursor" : null)}>
                 <BsCursor/>
+            </Button>
+            <Button
+                active={props.activeTool === "shift"}
+                click={() => props.click(props.activeTool !== "shift" ? "shift" : null)}>
+                <BiMove/>
             </Button>
 
             <Button
