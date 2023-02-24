@@ -1,19 +1,26 @@
+import {IconButton} from "@mui/material";
 
-const Button = (props) => {
+const ToolbarButton = (props) => {
 
-    const style = "w-[40px] h-[40px] border border-gray-300 rounded-lg flex items-center " +
-        "justify-center bg-stone-200 hover:bg-stone-300 text-stone-600 ";
-
-    const focus = props.active ? "bg-yellow-200" : "bg-stone-200";
+    const focus = props.active ? "#fef08a" : "#e7e5e4";
 
     return (
-        <button
-            className={style + focus}
-            onClick={props.click}
-        >
+        <IconButton component="label" onClick={props.click} sx={{
+            width: '40px',
+            height: '40px',
+            border: '1px solid #555555',
+            borderRadius: 2,
+            color: '#555555',
+            padding: 1,
+            backgroundColor: focus,
+            fontSize: 16,
+            '&:hover': {
+                backgroundColor: '#c6d4d3',
+            },
+        }}>
             {props.children}
-        </button>
+        </IconButton>
     )
 }
 
-export default Button;
+export default ToolbarButton;

@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import {SVG} from "@svgdotjs/svg.js";
+import '@svgdotjs/svg.draggable.js'
 
 const WorkingField = (props) => {
 
@@ -14,6 +15,7 @@ const WorkingField = (props) => {
 
     useEffect(() => {
         const svg = SVG(svgRef.current);
+
         svg.off();
 
         const createEditElementByElement = (element, r) => {
@@ -125,54 +127,54 @@ const WorkingField = (props) => {
         }
 
         svg.on('mousedown', event => {
-            if (props.activeTool === 'rectangle') {
-                const rect = svg.rect(10, 10).move(event.offsetX, event.offsetY);
-                rect.attr({
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
+                let element;
+                switch (props.activeTool) {
+                    case 'rectangle':
+                        element = svg.rect(10, 10).move(event.offsetX, event.offsetY).attr({
+                            id: 'rect' + createId
+                        });
+                        break;
+                    case 'circle':
+                        element = svg.ellipse(5, 5).move(event.offsetX, event.offsetY).width(5).height(5).attr({
+                            id: 'ellipse' + createId
+                        });
+                        break;
+                }
+
+                element.attr({
                     fill: "rgba(161,230,255,0.5)",
                     stroke: "rgba(121,190,215,0.5)",
-                    id: 'rect' + createId
                 })
-                rect.remember("active", false);
+                element.remember("active", false);
                 setCreateId(createId + 1);
-                svg.remember('element', rect);
+                svg.remember('element', element);
             }
+
             if (props.activeTool === 'cursor') {
-                console.log(event.target.id);
                 if (event.target.id && event.target.id.includes('editElement')) {
-                    if (event.target.id.includes('rotate')) {
-                        const rect = svg.findOne('.rect');
-                        svg.remember('elementRotate', rect);
-                        deleteCircleEditElements();
-                    }
-                    if (event.target.id.includes('rect')) {
-                        const rect = svg.findOne('.rect');
-                        svg.remember('elementEdit', rect);
-                        deleteCircleEditElements();
-                    }
-                    // if (event.target.id.includes('east')) {
-                    //     const rect = svg.findOne('.rect');
-                    //     svg.remember('elementEast', rect);
-                    //     deleteCircleEditElements();
-                    // }
+                    const rect = svg.findOne('.rect');
+                    if (event.target.id.includes('rotate')) svg.remember('elementRotate', rect);
+                    if (event.target.id.includes('rect')) svg.remember('elementEdit', rect);
+                    deleteCircleEditElements();
                 }
             }
         })
 
         svg.on('mousemove', event => {
-            if (props.activeTool === 'rectangle') {
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
                 if (svg.remember("element")) {
-                    const rect = svg.remember("element");
-                    const bbox = rect.bbox();
+                    const element = svg.remember("element");
+                    const bbox = element.bbox();
+                    console.log(bbox);
 
                     let width, height;
-
                     if (event.offsetX > bbox.x) width = event.offsetX - bbox.x;
                     else width = 1;
-
                     if (event.offsetY > bbox.y) height = event.offsetY - bbox.y;
                     else height = 1;
 
-                    rect.attr({width: width, height: height});
+                    element.width(width).height(height);
                 }
             }
             if (props.activeTool === 'cursor') {
@@ -188,29 +190,34 @@ const WorkingField = (props) => {
                 }
                 if (svg.remember('elementEdit')) {
                     const element = svg.remember('elementEdit');
+                    const bbox = element.bbox();
+
+                    const rotate = element.transform().rotate;
+                    const getTanFromDegrees = (rotate) => {
+                        return Math.tan(rotate * Math.PI / 180)
+                    }
+
+                    console.log(rotate, getTanFromDegrees(rotate));
+
+                    // const temph = event.offsetY - bbox.cy;
+                    // const tempw = event.offsetX - bbox.cx;
+                    //
+                    // const bw = temph - (getTanFromDegrees(rotate) * tempw);
+                    // const tempww = (bw / (getTanFromDegrees(90 + rotate) - getTanFromDegrees(rotate)));
+                    // const tempwh = getTanFromDegrees(rotate) * tempww + bw;
+                    //
+                    // const w = Math.sqrt(Math.pow((tempw - tempww), 2) + Math.pow(temph - tempwh, 2));
 
                     element.center(event.offsetX, event.offsetY);
-                    console.log(element.attr());
-                }
-                // if (svg.remember('elementEast')) {
-                //     const element = svg.remember('elementEast');
-                //     const bbox = element.bbox();
-                //     console.log(bbox);
-                //
-                //     const width = event.offsetX - bbox.x;
-                //
-                //     element.attr({
-                //         width: width
-                //     });
-                // }
 
+                }
             }
         })
 
         svg.on("mouseup", () => {
-            if (props.activeTool === 'rectangle') {
-                const rect = svg.remember('element');
-                rect.attr({
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
+                const element = svg.remember('element');
+                element.attr({
                     fill: "#abe538",
                     stroke: "#aac316"
                 })
@@ -218,7 +225,7 @@ const WorkingField = (props) => {
                 props.setActiveTool(null);
             }
             if (props.activeTool === 'cursor') {
-                if (svg.remember('elementRotate') ) {
+                if (svg.remember('elementRotate')) {
                     const element = svg.remember('elementRotate');
                     const activeElement = svg.remember('activeElement');
                     activeElement.rotate(-activeElement.transform().rotate + element.transform().rotate);
@@ -237,17 +244,6 @@ const WorkingField = (props) => {
                     createEditElementByElement(activeElement, 8)
                     console.log(activeElement.bbox(), activeElement.transform());
                 }
-                // if (svg.remember('elementEast')) {
-                //     const element = svg.remember('elementEast');
-                //     const bbox = element.bbox();
-                //     const activeElement = svg.remember('activeElement');
-                //     activeElement.attr({
-                //         width: bbox.width
-                //     })
-                //     svg.remember('elementEast', null);
-                //     deleteAllEditElements()
-                //     createEditElementByElement(activeElement, 8)
-                // }
             }
         })
 
@@ -259,12 +255,18 @@ const WorkingField = (props) => {
                             //TODO
                         } else {
                             const activeElement = svg.findOne('#' + event.target.id);
+
+                            console.log(activeElement.transform());
+
                             deleteAllEditElements();
                             svg.remember('activeElement', activeElement);
                             createEditElementByElement(activeElement, 8);
                         }
                     } else {
                         const activeElement = svg.findOne('#' + event.target.id);
+
+                        console.log(activeElement.transform());
+
                         svg.remember('activeElement', activeElement);
                         createEditElementByElement(activeElement, 8);
                     }
@@ -276,7 +278,6 @@ const WorkingField = (props) => {
                 }
             }
         })
-
 
         if (props.activeTool === null) {
             svg.off();
