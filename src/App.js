@@ -1,6 +1,6 @@
 import SvgEdytor from "./components/svg-edytor";
 import Toolbar from "./components/ui/toolbar";
-import WorkingField from "./components/ui/working-field3";
+import WorkingField from "./components/ui/working-field";
 import InfoPanel from "./components/ui/info-panel";
 import {useEffect, useState} from "react";
 
