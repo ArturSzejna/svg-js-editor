@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import {SVG} from "@svgdotjs/svg.js";
 import '@svgdotjs/svg.draggable.js'
 
-import {getTanFromDegrees, moveElement, rotateElement} from '../helper/editing-helper';
+import {moveElement, rotateElement} from '../helper/editing-helper';
 
 import {createEditElementByElement, deleteAllEditElements, deleteCircleEditElements} from '../helper/creating-helper';
 
@@ -95,6 +95,7 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchEast');
                     const activeElement = svg.remember('activeElement');
                     const centerPosition = moveElement(event, element);
+                    console.log(activeElement.type);
 
                     let width = centerPosition.cx - activeElement.bbox().x
                     let x = activeElement.bbox().x;
@@ -105,9 +106,8 @@ const WorkingField = (props) => {
                     }
 
                     element.attr({
-                        x: x,
-                        width: width
-                    })
+                        x: x
+                    }).width(width);
                 }
                 if (svg.remember('elementStretchWest')) {
                     const element = svg.remember('elementStretchWest');
@@ -123,9 +123,8 @@ const WorkingField = (props) => {
                     }
 
                     element.attr({
-                        x: x,
-                        width: width
-                    })
+                        x: x
+                    }).width(width)
                 }
                 if (svg.remember('elementStretchSouth')) {
                     const element = svg.remember('elementStretchSouth');
@@ -141,9 +140,8 @@ const WorkingField = (props) => {
                     }
 
                     element.attr({
-                        y: y,
-                        height: height
-                    })
+                        y: y
+                    }).height(height);
                 }
                 if (svg.remember('elementStretchNorth')) {
                     const element = svg.remember('elementStretchNorth');
@@ -159,9 +157,8 @@ const WorkingField = (props) => {
                     }
 
                     element.attr({
-                        y: y,
-                        height: height
-                    })
+                        y: y
+                    }).height(height);
                 }
             }
         })
@@ -199,10 +196,7 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchEast');
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
-                    activeElement.move(bbox.x, bbox.y).attr({
-                        width: bbox.width,
-                        height: bbox.height
-                    });
+                    activeElement.move(bbox.x, bbox.y).width(bbox.width);
                     svg.remember('elementStretchEast', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -211,10 +205,7 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchWest');
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
-                    activeElement.move(bbox.x, bbox.y).attr({
-                        width: bbox.width,
-                        height: bbox.height
-                    });
+                    activeElement.move(bbox.x, bbox.y).width(bbox.width);
                     svg.remember('elementStretchWest', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -223,10 +214,7 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchSouth');
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
-                    activeElement.move(bbox.x, bbox.y).attr({
-                        width: bbox.width,
-                        height: bbox.height
-                    });
+                    activeElement.move(bbox.x, bbox.y).height(bbox.height);
                     svg.remember('elementStretchSouth', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -235,10 +223,7 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchNorth');
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
-                    activeElement.move(bbox.x, bbox.y).attr({
-                        width: bbox.width,
-                        height: bbox.height
-                    });
+                    activeElement.move(bbox.x, bbox.y).height(bbox.height);
                     svg.remember('elementStretchNorth', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -254,25 +239,22 @@ const WorkingField = (props) => {
                             //TODO
                         } else {
                             const activeElement = svg.findOne('#' + event.target.id);
-
-                            console.log(activeElement.transform());
-
                             deleteAllEditElements(svg);
                             svg.remember('activeElement', activeElement);
+                            props.setActiveElement(activeElement);
                             createEditElementByElement(svg, activeElement, 8);
                         }
                     } else {
                         const activeElement = svg.findOne('#' + event.target.id);
-
-                        console.log(activeElement.transform());
-
                         svg.remember('activeElement', activeElement);
+                        props.setActiveElement(activeElement);
                         createEditElementByElement(svg, activeElement, 8);
                     }
                 } else {
                     if (svg.remember('activeElement')) {
                         deleteAllEditElements(svg);
                         svg.remember('activeElement', null);
+                        props.setActiveElement(null);
                     }
                 }
             }
@@ -284,7 +266,7 @@ const WorkingField = (props) => {
             deleteAllEditElements(svg);
         }
 
-    }, [props.activeTool]);
+    }, [createId, props, props.activeTool]);
 
     const workPlaceStyle = "w-[" + pageSize.width + "px] h-[" + pageSize.height + "px] border bg-white drop-shadow-md";
     const viewBox = "0 0 " + pageSize.width + " " + pageSize.height;

@@ -7,11 +7,11 @@ import {useEffect, useState} from "react";
 function App() {
 
     const [activeTool, setActiveTool] = useState(null);
-    const [childrenList, setChildrenList] = useState([]);
+    const [activeElement, setActiveElement] = useState(null);
 
     useEffect(() => {
-        console.log(childrenList);
-    }, [childrenList])
+        console.log(activeElement);
+    }, [activeElement])
 
     return (
         <SvgEdytor>
@@ -20,14 +20,15 @@ function App() {
 
             <WorkingField activeTool={activeTool}
                           setActiveTool={setActiveTool}
-                          setChildrenList={setChildrenList}
-                          childrenList={childrenList}
+                          activeElement={activeElement}
+                          setActiveElement={setActiveElement}
                           width={650}
-                          height={650} />
+                          height={650}/>
 
             <InfoPanel activeTool={activeTool}
                        setActiveTool={setActiveTool}
-                       childrenList={childrenList}/>
+                       activeElement={activeElement}
+                       setActiveElement={setActiveElement}/>
         </SvgEdytor>
     );
 }
