@@ -15,14 +15,19 @@ function App() {
 
     return (
         <SvgEdytor>
-            <Toolbar activeTool={activeTool} click={tool => setActiveTool(tool)}/>
+            <Toolbar activeTool={activeTool}
+                     click={tool => setActiveTool(tool)}/>
+
             <WorkingField activeTool={activeTool}
                           setActiveTool={setActiveTool}
                           setChildrenList={setChildrenList}
                           childrenList={childrenList}
                           width={650}
                           height={650} />
-            <InfoPanel activeTool={activeTool} setActiveTool={setActiveTool} childrenList={childrenList}/>
+
+            <InfoPanel activeTool={activeTool}
+                       setActiveTool={setActiveTool}
+                       childrenList={childrenList}/>
         </SvgEdytor>
     );
 }

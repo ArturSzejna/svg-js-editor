@@ -1,8 +1,22 @@
+
 export function getTanFromDegrees(degrees) {
     return Math.tan(degrees * Math.PI / 180);
 }
 
-export function xyz(event, element) {
+export function rotateElement(event, element){
+    const bbox = element.bbox();
+
+    const decompose = element.matrix().decompose(element.cx(), element.cy());
+    const cx = bbox.cx + decompose.translateX;
+    const cy = bbox.cy + decompose.translateY;
+
+    let calk = 180 / Math.PI * Math.atan((cy - event.offsetY) / (cx - event.offsetX));
+    const deg = (cx - event.offsetX < 0) ? calk : calk + 180;
+
+    return -element.transform().rotate + deg
+}
+
+export function moveElement(event, element) {
 
     const tx = element.transform().translateX;
     const ty = element.transform().translateY;

@@ -2,7 +2,10 @@ import {useEffect, useRef, useState} from "react";
 import {SVG} from "@svgdotjs/svg.js";
 import '@svgdotjs/svg.draggable.js'
 
-import {getTanFromDegrees} from '../helper/trigonometric';
+import {getTanFromDegrees, moveElement, rotateElement} from '../helper/editing-helper';
+
+import {createEditElementByElement, deleteAllEditElements, deleteCircleEditElements} from '../helper/creating-helper';
+
 const WorkingField = (props) => {
 
     const svgRef = useRef(null);
@@ -18,114 +21,6 @@ const WorkingField = (props) => {
         const svg = SVG(svgRef.current);
 
         svg.off();
-
-        const createEditElementByElement = (element, r) => {
-            const bbox = element.bbox();
-
-            svg.rect(bbox.width, bbox.height).move(bbox.x, bbox.y).attr({
-                fill: "rgba(161,230,255,0.5)",
-                stroke: "rgba(121,190,215,0.5)",
-                id: 'editElement-rect',
-                class: 'rect'
-            }).transform(element.transform());
-
-            svg.line(bbox.x + bbox.width, bbox.y + bbox.height / 2, bbox.x + bbox.width + 25, bbox.y + bbox.height / 2).attr({
-                stroke: 'rgba(121,190,215,0.5)',
-                strokeWidth: 1,
-                id: 'editElement-line',
-                class: 'line'
-            }).transform(element.transform());
-
-            svg.circle(r + 2).move(bbox.x - r / 2 - 1 + bbox.width + 25, bbox.y - r / 2 - 1 + bbox.height / 2).attr({
-                fill: "#ffffff",
-                stroke: "#132d28",
-                cursor: "grab",
-                id: 'editElement-rotate',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2 + bbox.height / 2).attr({
-                fill: "#ffffff",
-                stroke: "#132d28",
-                cursor: "e-resize",
-                id: 'editElement-east',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - 4 + bbox.height / 2).attr({
-                fill: "#ffffff",
-                stroke: "#132d28",
-                cursor: "e-resize",
-                id: 'editElement-west',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editUp = svg.circle(r).move(bbox.x - r / 2 + bbox.width / 2, bbox.y - r / 2).attr({
-                fill: "#ffffff",
-                stroke: "#132d28",
-                cursor: "n-resize",
-                id: 'editElement-north',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editBottom = svg.circle(r).move(bbox.x - r / 2 + bbox.width / 2, bbox.y - r / 2 + bbox.height).attr({
-                fill: "#ffffff",
-                stroke: "#132d28",
-                cursor: "n-resize",
-                id: 'editElement-south',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editCornerUpLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - r / 2).attr({
-                fill: "#e3e3e3",
-                stroke: "#132d28",
-                cursor: "nw-resize",
-                id: 'editElement-circle6',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editCornerUpRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2).attr({
-                fill: "#e3e3e3",
-                stroke: "#132d28",
-                cursor: "sw-resize",
-                id: 'editElement-circle7',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editCornerBottomLeft = svg.circle(r).move(bbox.x - r / 2, bbox.y - r / 2 + bbox.height).attr({
-                fill: "#e3e3e3",
-                stroke: "#132d28",
-                cursor: "sw-resize",
-                id: 'editElement-circle8',
-                class: 'circle'
-            }).transform(element.transform());
-
-            const editCornerBottomRight = svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2 + bbox.height).attr({
-                fill: "#e3e3e3",
-                stroke: "#132d28",
-                cursor: "nw-resize",
-                id: 'editElement-circle9',
-                class: 'circle'
-            }).transform(element.transform());
-
-        }
-        const deleteAllEditElements = () => {
-            const rect = svg.find('.rect');
-            if (rect.length > 0) {
-                rect.map(element => element.remove());
-            }
-            deleteCircleEditElements();
-        }
-        const deleteCircleEditElements = () => {
-            const editElements = svg.find('.circle');
-            if (editElements.length > 0) {
-                editElements.map(element => element.remove());
-            }
-            const line = svg.find('.line');
-            if (line.length > 0) {
-                line.map(element => element.remove());
-            }
-        }
 
         svg.on('mousedown', event => {
             if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
@@ -154,10 +49,17 @@ const WorkingField = (props) => {
 
             if (props.activeTool === 'cursor') {
                 if (event.target.id && event.target.id.includes('editElement')) {
-                    const rect = svg.findOne('.rect');
-                    if (event.target.id.includes('rotate')) svg.remember('elementRotate', rect);
-                    if (event.target.id.includes('rect')) svg.remember('elementEdit', rect);
-                    deleteCircleEditElements();
+                    const element = svg.findOne('.rect');
+                    if (event.target.id.includes('rotate')) svg.remember('elementRotate', element);
+                    if (event.target.id.includes('rect')) svg.remember('elementEdit', element);
+
+                    if (event.target.id.includes('stretch')) {
+                        if (event.target.id.includes('east')) svg.remember('elementStretchEast', element);
+                        if (event.target.id.includes('west')) svg.remember('elementStretchWest', element);
+                        if (event.target.id.includes('south')) svg.remember('elementStretchSouth', element);
+                        if (event.target.id.includes('north')) svg.remember('elementStretchNorth', element);
+                    }
+                    deleteCircleEditElements(svg);
                 }
             }
         })
@@ -179,52 +81,88 @@ const WorkingField = (props) => {
                 }
             }
             if (props.activeTool === 'cursor') {
-                if (svg.remember('elementRotate')) {
+                if (svg.remember('elementRotate')) { //ROTATE
                     const element = svg.remember('elementRotate');
-                    const bbox = element.bbox();
-
-                    const decompose = element.matrix().decompose(element.cx(), element.cy());
-                    const cx = bbox.cx + decompose.translateX;
-                    const cy = bbox.cy + decompose.translateY;
-
-                    let calk = 180 / Math.PI * Math.atan((cy - event.offsetY) / (cx - event.offsetX));
-                    const deg = (cx - event.offsetX < 0) ? calk : calk + 180;
-
-                    element.rotate(-element.transform().rotate + deg);
+                    element.rotate(rotateElement(event, element));
                 }
-                if (svg.remember('elementEdit')) {
+                if (svg.remember('elementEdit')) { //MOVE
                     const element = svg.remember('elementEdit');
-
-                    const tx = element.transform().translateX;
-                    const ty = element.transform().translateY;
-                    const angle = element.transform().rotate;
-                    let tempw = (event.offsetX - tx);
-                    let temph = (event.offsetY - ty);
-
-                    console.log(tx, ty);
-
-                    const bw = temph - (getTanFromDegrees(angle) * tempw);
-                    const tempww = (bw / (getTanFromDegrees(90 + angle) - getTanFromDegrees(angle)));
-                    const tempwh = getTanFromDegrees(angle) * tempww + bw;
-
-                    const bh = temph - (getTanFromDegrees(90 + angle) * tempw);
-                    const temphw = (bh / (getTanFromDegrees(angle) - getTanFromDegrees(90 + angle)));
-                    const temphh = getTanFromDegrees(angle) * temphw;
-
-                    let w = Math.sqrt(Math.pow((tempw - tempww), 2) + Math.pow(temph - tempwh, 2));
-                    let h = Math.sqrt(Math.pow((tempw - temphw), 2) + Math.pow(temph - temphh, 2));
-                    if (angle !== 0) {
-                        if (angle < 0) {
-                            if (tempww < 0) h = -(h);
-                            if (temphh > 0) w = -(w);
-                        } else {
-                            if (tempww > 0) h = -(h);
-                            if (temphh < 0) w = -(w);
-                        }
-                    }
-                    element.center(w, h);
+                    const centerPosition = moveElement(event, element);
+                    element.center(centerPosition.cx, centerPosition.cy);
                 }
 
+                if (svg.remember('elementStretchEast')) {
+                    const element = svg.remember('elementStretchEast');
+                    const activeElement = svg.remember('activeElement');
+                    const centerPosition = moveElement(event, element);
+
+                    let width = centerPosition.cx - activeElement.bbox().x
+                    let x = activeElement.bbox().x;
+
+                    if (width < 0) {
+                        x = x + width;
+                        width = Math.abs(width);
+                    }
+
+                    element.attr({
+                        x: x,
+                        width: width
+                    })
+                }
+                if (svg.remember('elementStretchWest')) {
+                    const element = svg.remember('elementStretchWest');
+                    const activeElement = svg.remember('activeElement');
+                    const centerPosition = moveElement(event, element);
+
+                    let x = centerPosition.cx;
+                    let width = activeElement.bbox().width + activeElement.bbox().x - x;
+
+                    if (width < 0) {
+                        x = activeElement.bbox().x2;
+                        width = centerPosition.cx - activeElement.bbox().x - activeElement.bbox().width;
+                    }
+
+                    element.attr({
+                        x: x,
+                        width: width
+                    })
+                }
+                if (svg.remember('elementStretchSouth')) {
+                    const element = svg.remember('elementStretchSouth');
+                    const activeElement = svg.remember('activeElement');
+                    const centerPosition = moveElement(event, element);
+
+                    let height = centerPosition.cy - activeElement.bbox().y
+                    let y = activeElement.bbox().y;
+
+                    if (height < 0) {
+                        y = y + height;
+                        height = Math.abs(height);
+                    }
+
+                    element.attr({
+                        y: y,
+                        height: height
+                    })
+                }
+                if (svg.remember('elementStretchNorth')) {
+                    const element = svg.remember('elementStretchNorth');
+                    const activeElement = svg.remember('activeElement');
+                    const centerPosition = moveElement(event, element);
+
+                    let y = centerPosition.cy;
+                    let height = activeElement.bbox().height + activeElement.bbox().y - y;
+
+                    if (height < 0) {
+                        y = activeElement.bbox().y2;
+                        height = centerPosition.cy - activeElement.bbox().y - activeElement.bbox().height;
+                    }
+
+                    element.attr({
+                        y: y,
+                        height: height
+                    })
+                }
             }
         })
 
@@ -244,8 +182,8 @@ const WorkingField = (props) => {
                     const activeElement = svg.remember('activeElement');
                     activeElement.rotate(-activeElement.transform().rotate + element.transform().rotate);
                     svg.remember('elementRotate', null);
-                    deleteAllEditElements()
-                    createEditElementByElement(activeElement, 8)
+                    deleteAllEditElements(svg)
+                    createEditElementByElement(svg, activeElement, 8)
                 }
                 if (svg.remember('elementEdit')) {
                     const element = svg.remember('elementEdit');
@@ -253,8 +191,57 @@ const WorkingField = (props) => {
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y);
                     svg.remember('elementEdit', null);
-                    deleteAllEditElements()
-                    createEditElementByElement(activeElement, 8)
+                    deleteAllEditElements(svg)
+                    createEditElementByElement(svg, activeElement, 8)
+                }
+
+                if (svg.remember('elementStretchEast')) {
+                    const element = svg.remember('elementStretchEast');
+                    const bbox = element.bbox();
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.move(bbox.x, bbox.y).attr({
+                        width: bbox.width,
+                        height: bbox.height
+                    });
+                    svg.remember('elementStretchEast', null);
+                    deleteAllEditElements(svg);
+                    createEditElementByElement(svg, activeElement, 8);
+                }
+                if (svg.remember('elementStretchWest')) {
+                    const element = svg.remember('elementStretchWest');
+                    const bbox = element.bbox();
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.move(bbox.x, bbox.y).attr({
+                        width: bbox.width,
+                        height: bbox.height
+                    });
+                    svg.remember('elementStretchWest', null);
+                    deleteAllEditElements(svg);
+                    createEditElementByElement(svg, activeElement, 8);
+                }
+                if (svg.remember('elementStretchSouth')) {
+                    const element = svg.remember('elementStretchSouth');
+                    const bbox = element.bbox();
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.move(bbox.x, bbox.y).attr({
+                        width: bbox.width,
+                        height: bbox.height
+                    });
+                    svg.remember('elementStretchSouth', null);
+                    deleteAllEditElements(svg);
+                    createEditElementByElement(svg, activeElement, 8);
+                }
+                if (svg.remember('elementStretchNorth')) {
+                    const element = svg.remember('elementStretchNorth');
+                    const bbox = element.bbox();
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.move(bbox.x, bbox.y).attr({
+                        width: bbox.width,
+                        height: bbox.height
+                    });
+                    svg.remember('elementStretchNorth', null);
+                    deleteAllEditElements(svg);
+                    createEditElementByElement(svg, activeElement, 8);
                 }
             }
         })
@@ -270,9 +257,9 @@ const WorkingField = (props) => {
 
                             console.log(activeElement.transform());
 
-                            deleteAllEditElements();
+                            deleteAllEditElements(svg);
                             svg.remember('activeElement', activeElement);
-                            createEditElementByElement(activeElement, 8);
+                            createEditElementByElement(svg, activeElement, 8);
                         }
                     } else {
                         const activeElement = svg.findOne('#' + event.target.id);
@@ -280,11 +267,11 @@ const WorkingField = (props) => {
                         console.log(activeElement.transform());
 
                         svg.remember('activeElement', activeElement);
-                        createEditElementByElement(activeElement, 8);
+                        createEditElementByElement(svg, activeElement, 8);
                     }
                 } else {
                     if (svg.remember('activeElement')) {
-                        deleteAllEditElements();
+                        deleteAllEditElements(svg);
                         svg.remember('activeElement', null);
                     }
                 }
@@ -294,7 +281,7 @@ const WorkingField = (props) => {
         if (props.activeTool === null) {
             svg.off();
             svg.remember('activeElement', null);
-            deleteAllEditElements();
+            deleteAllEditElements(svg);
         }
 
     }, [props.activeTool]);
