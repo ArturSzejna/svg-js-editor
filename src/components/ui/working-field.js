@@ -1,6 +1,5 @@
 import {useEffect, useRef, useState} from "react";
 import {SVG} from "@svgdotjs/svg.js";
-import '@svgdotjs/svg.draggable.js'
 
 import {moveElement, rotateElement} from '../helper/editing-helper';
 
@@ -30,12 +29,15 @@ const WorkingField = (props) => {
                         element = svg.rect(10, 10).move(event.offsetX, event.offsetY).attr({
                             id: 'rect' + createId
                         });
+                        props.setElements([...props.elements, {id: 'rect' + createId, active: false, type: element.type}]);
                         break;
                     case 'circle':
                         element = svg.ellipse(5, 5).move(event.offsetX, event.offsetY).width(5).height(5).attr({
                             id: 'ellipse' + createId
                         });
+                        props.setElements([...props.elements, {id: 'ellipse' + createId, active: false, type: element.type}]);
                         break;
+                    default:
                 }
 
                 element.attr({
@@ -69,7 +71,6 @@ const WorkingField = (props) => {
                 if (svg.remember("element")) {
                     const element = svg.remember("element");
                     const bbox = element.bbox();
-                    console.log(element.transform());
 
                     let width, height;
                     if (event.offsetX > bbox.x) width = event.offsetX - bbox.x;
@@ -95,7 +96,6 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementStretchEast');
                     const activeElement = svg.remember('activeElement');
                     const centerPosition = moveElement(event, element);
-                    console.log(activeElement.type);
 
                     let width = centerPosition.cx - activeElement.bbox().x
                     let x = activeElement.bbox().x;
@@ -178,6 +178,8 @@ const WorkingField = (props) => {
                     const element = svg.remember('elementRotate');
                     const activeElement = svg.remember('activeElement');
                     activeElement.rotate(-activeElement.transform().rotate + element.transform().rotate);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementRotate', null);
                     deleteAllEditElements(svg)
                     createEditElementByElement(svg, activeElement, 8)
@@ -187,6 +189,8 @@ const WorkingField = (props) => {
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementEdit', null);
                     deleteAllEditElements(svg)
                     createEditElementByElement(svg, activeElement, 8)
@@ -197,6 +201,8 @@ const WorkingField = (props) => {
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y).width(bbox.width);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementStretchEast', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -206,6 +212,8 @@ const WorkingField = (props) => {
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y).width(bbox.width);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementStretchWest', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -215,6 +223,8 @@ const WorkingField = (props) => {
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y).height(bbox.height);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementStretchSouth', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -224,6 +234,8 @@ const WorkingField = (props) => {
                     const bbox = element.bbox();
                     const activeElement = svg.remember('activeElement');
                     activeElement.move(bbox.x, bbox.y).height(bbox.height);
+                    props.setActiveElement(null);
+                    props.setActiveElement(activeElement);
                     svg.remember('elementStretchNorth', null);
                     deleteAllEditElements(svg);
                     createEditElementByElement(svg, activeElement, 8);
@@ -241,12 +253,14 @@ const WorkingField = (props) => {
                             const activeElement = svg.findOne('#' + event.target.id);
                             deleteAllEditElements(svg);
                             svg.remember('activeElement', activeElement);
+                            props.setSelectedIndex(activeElement.id());
                             props.setActiveElement(activeElement);
                             createEditElementByElement(svg, activeElement, 8);
                         }
                     } else {
                         const activeElement = svg.findOne('#' + event.target.id);
                         svg.remember('activeElement', activeElement);
+                        props.setSelectedIndex(activeElement.id());
                         props.setActiveElement(activeElement);
                         createEditElementByElement(svg, activeElement, 8);
                     }
@@ -255,6 +269,7 @@ const WorkingField = (props) => {
                         deleteAllEditElements(svg);
                         svg.remember('activeElement', null);
                         props.setActiveElement(null);
+                        props.setSelectedIndex(0);
                     }
                 }
             }
@@ -266,13 +281,21 @@ const WorkingField = (props) => {
             deleteAllEditElements(svg);
         }
 
-    }, [createId, props, props.activeTool]);
+        if (props.selectedIndex !== 0) {
+            const activeElement = svg.findOne('#' + props.selectedIndex);
+            deleteAllEditElements(svg);
+            svg.remember('activeElement', activeElement);
+            props.setActiveElement(activeElement);
+            createEditElementByElement(svg, activeElement, 8);
+        }
+
+    }, [createId, props, props.activeTool, props.selectedIndex]);
 
     const workPlaceStyle = "w-[" + pageSize.width + "px] h-[" + pageSize.height + "px] border bg-white drop-shadow-md";
     const viewBox = "0 0 " + pageSize.width + " " + pageSize.height;
 
     return (
-        <div className="w-[100%] bg-white-200 flex justify-center items-center relative">
+        <div className="w-[100%] bg-white-200 flex justify-center items-center relative bg-gray-200">
             <div className="flex flex-row absolute top-0 left-[50%-30px] z-10">
                 <input type={"number"} placeholder={"width"} className="border m-1 pl-1" value={pageSize.width}
                        onChange={(e) => setPageSize({

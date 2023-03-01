@@ -1,10 +1,10 @@
-import ToolbarButton from "./buttons";
+import ToolbarButton from "../model/toolbar-button";
 
 import {BsCircle, BsCursor, BsDashLg} from 'react-icons/bs';
 import {FaDrawPolygon} from 'react-icons/fa';
 import {BiRectangle, BiMove} from "react-icons/bi";
 
-import {Box} from "@mui/material";
+import {Box, Divider} from "@mui/material";
 
 const Toolbar = (props) => {
 
@@ -29,7 +29,7 @@ const Toolbar = (props) => {
                 <BiMove/>
             </ToolbarButton>
 
-            <hr />
+            <Divider />
 
             <ToolbarButton
                 active={props.activeTool === "rectangle"}
@@ -42,7 +42,7 @@ const Toolbar = (props) => {
                 <BsCircle/>
             </ToolbarButton>
 
-            <hr />
+            <Divider />
 
             <ToolbarButton
                 active={props.activeTool === "line"}

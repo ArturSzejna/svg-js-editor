@@ -5,8 +5,7 @@ const SvgEdytor = (props) => {
         <Box component="section" sx={{
             display: 'flex',
             flexDirection: 'row',
-            minHeight: '100vh',
-            backgroundColor: '#bdbdbd'
+            minHeight: '100vh'
         }}>
             {props.children}
         </Box>

@@ -1,9 +1,8 @@
 export const createEditElementByElement = (svg, element, r) => {
     const bbox = element.bbox();
 
-    svg.rect(bbox.width, bbox.height).move(bbox.x, bbox.y).attr({
-        fill: "rgba(161,230,255,0.5)",
-        stroke: "rgba(121,190,215,0.5)",
+    svg.rect(bbox.width, bbox.height).move(bbox.x, bbox.y).stroke({ color: '#FFBE00FF', opacity: 1, width: 2 }).attr({
+        fill: "rgba(255,255,255,0.01)",
         id: 'editElement-rect',
         class: 'rect'
     }).transform(element.transform());
