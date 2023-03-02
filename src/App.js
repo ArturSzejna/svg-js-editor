@@ -12,15 +12,7 @@ function App() {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     useEffect(() => {
-        if (activeElement) {
 
-        } else {
-            setSelectedIndex(0);
-        }
-    }, [activeElement])
-
-    useEffect(() => {
-        console.log(elements);
     }, [elements])
 
     return (

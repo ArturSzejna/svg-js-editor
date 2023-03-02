@@ -1,7 +1,7 @@
 import ToolbarButton from "../model/toolbar-button";
 
 import {BsCircle, BsCursor, BsDashLg} from 'react-icons/bs';
-import {FaDrawPolygon} from 'react-icons/fa';
+import {FaDrawPolygon, FaBezierCurve} from 'react-icons/fa';
 import {BiRectangle, BiMove} from "react-icons/bi";
 
 import {Box, Divider} from "@mui/material";
@@ -49,6 +49,17 @@ const Toolbar = (props) => {
                 click={() => props.click(props.activeTool !== "line" ? "line" : null)}>
                 <BsDashLg/>
             </ToolbarButton>
+            <ToolbarButton
+                active={props.activeTool === "curve"}
+                click={() => props.click(props.activeTool !== "curve" ? "curve" : null)}>
+                <FaBezierCurve/>
+            </ToolbarButton>
+            <ToolbarButton
+                active={props.activeTool === "polyline"}
+                click={() => props.click(props.activeTool !== "polyline" ? "polyline" : null)}>
+                <FaBezierCurve/>
+            </ToolbarButton>
+
             <ToolbarButton
                 active={props.activeTool === "polygon"}
                 click={() => props.click(props.activeTool !== "polygon" ? "polygon" : null)}>

@@ -1,9 +1,17 @@
 import {useEffect, useRef, useState} from "react";
-import {SVG} from "@svgdotjs/svg.js";
+import {Array, SVG} from "@svgdotjs/svg.js";
 
 import {moveElement, rotateElement} from '../helper/editing-helper';
 
-import {createEditElementByElement, deleteAllEditElements, deleteCircleEditElements} from '../helper/creating-helper';
+import {
+    createEditElementByElement,
+    createEditPathElementByElement,
+    createMoveElementByElement,
+    deleteAllEditElements,
+    deleteCircleElements,
+    deleteLineElements
+} from '../helper/creating-helper';
+import {arrayToString} from "../helper/helper";
 
 const WorkingField = (props) => {
 
@@ -16,58 +24,93 @@ const WorkingField = (props) => {
 
     const [createId, setCreateId] = useState(1245);
 
+    const [pathArray, setPathArray] = useState(null);
+
     useEffect(() => {
         const svg = SVG(svgRef.current);
 
         svg.off();
 
         svg.on('mousedown', event => {
-            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
-                let element;
-                switch (props.activeTool) {
-                    case 'rectangle':
-                        element = svg.rect(10, 10).move(event.offsetX, event.offsetY).attr({
-                            id: 'rect' + createId
-                        });
-                        props.setElements([...props.elements, {id: 'rect' + createId, active: false, type: element.type}]);
-                        break;
-                    case 'circle':
-                        element = svg.ellipse(5, 5).move(event.offsetX, event.offsetY).width(5).height(5).attr({
-                            id: 'ellipse' + createId
-                        });
-                        props.setElements([...props.elements, {id: 'ellipse' + createId, active: false, type: element.type}]);
-                        break;
-                    default:
-                }
-
-                element.attr({
-                    fill: "rgba(161,230,255,0.5)",
-                    stroke: "rgba(121,190,215,0.5)",
-                })
-                element.remember("active", false);
-                setCreateId(createId + 1);
-                svg.remember('element', element);
-            }
-
-            if (props.activeTool === 'cursor') {
-                if (event.target.id && event.target.id.includes('editElement')) {
-                    const element = svg.findOne('.rect');
-                    if (event.target.id.includes('rotate')) svg.remember('elementRotate', element);
-                    if (event.target.id.includes('rect')) svg.remember('elementEdit', element);
-
-                    if (event.target.id.includes('stretch')) {
-                        if (event.target.id.includes('east')) svg.remember('elementStretchEast', element);
-                        if (event.target.id.includes('west')) svg.remember('elementStretchWest', element);
-                        if (event.target.id.includes('south')) svg.remember('elementStretchSouth', element);
-                        if (event.target.id.includes('north')) svg.remember('elementStretchNorth', element);
+            console.log(event.target.id);
+            if (event.which === 1) {
+                if (props.activeTool === 'rectangle' || props.activeTool === 'circle' || props.activeTool === 'line') {
+                    let element;
+                    switch (props.activeTool) {
+                        case 'rectangle':
+                            element = svg.rect(10, 10).move(event.offsetX, event.offsetY).attr({
+                                id: 'rect' + createId
+                            });
+                            break;
+                        case 'circle':
+                            element = svg.ellipse(5, 5).move(event.offsetX, event.offsetY).width(5).height(5).attr({
+                                id: 'ellipse' + createId
+                            });
+                            break;
+                        case 'line':
+                            element = svg.line(event.offsetX, event.offsetY, event.offsetX + 1, event.offsetY + 1)
+                                .stroke({color: '#000000', opacity: 1, width: 4})
+                                .attr({id: 'line' + createId});
+                            break;
+                        default:
                     }
-                    deleteCircleEditElements(svg);
+
+                    props.setElements([...props.elements, {id: element.id(), active: false, type: element.type}]);
+                    element.attr({
+                        fill: "rgba(161,230,255,0.5)",
+                        stroke: "rgba(121,190,215,0.5)",
+                    })
+                    // element.remember("active", false);
+                    setCreateId(createId + 1);
+                    svg.remember('element', element);
+                }
+                if (props.activeTool === 'cursor' || props.activeTool === 'shift') {
+                    if (event.target.id && event.target.id.includes('editElement')) {
+
+                        if (event.target.id.includes('rotate')) svg.remember('elementRotate', svg.findOne('.rect'));
+                        if (event.target.id.includes('rect')) svg.remember('elementEdit', svg.findOne('.rect'));
+
+                        if (event.target.id.includes('stretch')) {
+                            if (event.target.id.includes('east')) svg.remember('elementStretchEast', svg.findOne('.rect'));
+                            if (event.target.id.includes('west')) svg.remember('elementStretchWest', svg.findOne('.rect'));
+                            if (event.target.id.includes('south')) svg.remember('elementStretchSouth', svg.findOne('.rect'));
+                            if (event.target.id.includes('north')) svg.remember('elementStretchNorth', svg.findOne('.rect'));
+                        }
+
+                        if (event.target.id.includes('point')) {
+
+                            svg.remember('elementPath', {
+                                path: svg.findOne('.path'),
+                                index: event.target.id.split('-')[2]
+                            })
+                        }
+                        deleteCircleElements(svg);
+                        deleteLineElements(svg);
+                    }
+                }
+            }
+            if (event.which === 2) {
+                if (props.activeTool === 'polyline') {
+                    if (svg.remember('element')) {
+                        const element = svg.remember("element");
+                        const array = pathArray;
+
+                        array.pop();
+                        setPathArray(array);
+
+                        element.attr({
+                            d: arrayToString(array)
+                        })
+
+                        svg.remember('element', null);
+                        props.setActiveTool(null);
+                    }
                 }
             }
         })
 
         svg.on('mousemove', event => {
-            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle' || props.activeTool === 'line') {
                 if (svg.remember("element")) {
                     const element = svg.remember("element");
                     const bbox = element.bbox();
@@ -81,7 +124,22 @@ const WorkingField = (props) => {
                     element.width(width).height(height);
                 }
             }
-            if (props.activeTool === 'cursor') {
+
+            if (props.activeTool === 'polyline') {
+                if (svg.remember("element")) {
+                    const element = svg.remember("element");
+                    const array = pathArray;
+
+                    array[array.length - 1] = ['L', event.offsetX, event.offsetY];
+                    setPathArray(array);
+
+                    element.attr({
+                        d: arrayToString(array)
+                    })
+                }
+            }
+
+            if (props.activeTool === 'cursor' || props.activeTool === 'shift') {
                 if (svg.remember('elementRotate')) { //ROTATE
                     const element = svg.remember('elementRotate');
                     element.rotate(rotateElement(event, element));
@@ -160,11 +218,25 @@ const WorkingField = (props) => {
                         y: y
                     }).height(height);
                 }
+
+                if (svg.remember('elementPath')) {
+                    const element = svg.remember('elementPath');
+                    const path = element.path;
+                    const array = path._array;
+                    array[element.index][1] = event.offsetX;
+                    array[element.index][2] = event.offsetY;
+                    path.attr({
+                        d: arrayToString(array)
+                    })
+                        console.log(array[element.index]);
+
+
+                }
             }
         })
 
         svg.on("mouseup", () => {
-            if (props.activeTool === 'rectangle' || props.activeTool === 'circle') {
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle' || props.activeTool === 'line') {
                 const element = svg.remember('element');
                 element.attr({
                     fill: "#abe538",
@@ -173,7 +245,7 @@ const WorkingField = (props) => {
                 svg.remember('element', null);
                 props.setActiveTool(null);
             }
-            if (props.activeTool === 'cursor') {
+            if (props.activeTool === 'cursor' || props.activeTool === 'shift') {
                 if (svg.remember('elementRotate')) {
                     const element = svg.remember('elementRotate');
                     const activeElement = svg.remember('activeElement');
@@ -182,7 +254,12 @@ const WorkingField = (props) => {
                     props.setActiveElement(activeElement);
                     svg.remember('elementRotate', null);
                     deleteAllEditElements(svg)
-                    createEditElementByElement(svg, activeElement, 8)
+                    if (activeElement.id().includes('polyline')) {
+
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
+
                 }
                 if (svg.remember('elementEdit')) {
                     const element = svg.remember('elementEdit');
@@ -192,8 +269,21 @@ const WorkingField = (props) => {
                     props.setActiveElement(null);
                     props.setActiveElement(activeElement);
                     svg.remember('elementEdit', null);
-                    deleteAllEditElements(svg)
-                    createEditElementByElement(svg, activeElement, 8)
+                    deleteAllEditElements(svg);
+                    switch (props.activeTool) {
+                        case "cursor":
+                            if (activeElement.id().includes('polyline')) {
+
+                            } else {
+                                createEditElementByElement(svg, activeElement, 8)
+                            }
+                            break;
+                        case "shift":
+                            createMoveElementByElement(svg, activeElement);
+                            break;
+                        default:
+                    }
+
                 }
 
                 if (svg.remember('elementStretchEast')) {
@@ -205,7 +295,11 @@ const WorkingField = (props) => {
                     props.setActiveElement(activeElement);
                     svg.remember('elementStretchEast', null);
                     deleteAllEditElements(svg);
-                    createEditElementByElement(svg, activeElement, 8);
+                    if (activeElement.id().includes('polyline')) {
+
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
                 }
                 if (svg.remember('elementStretchWest')) {
                     const element = svg.remember('elementStretchWest');
@@ -216,7 +310,11 @@ const WorkingField = (props) => {
                     props.setActiveElement(activeElement);
                     svg.remember('elementStretchWest', null);
                     deleteAllEditElements(svg);
-                    createEditElementByElement(svg, activeElement, 8);
+                    if (activeElement.id().includes('polyline')) {
+
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
                 }
                 if (svg.remember('elementStretchSouth')) {
                     const element = svg.remember('elementStretchSouth');
@@ -227,7 +325,11 @@ const WorkingField = (props) => {
                     props.setActiveElement(activeElement);
                     svg.remember('elementStretchSouth', null);
                     deleteAllEditElements(svg);
-                    createEditElementByElement(svg, activeElement, 8);
+                    if (activeElement.id().includes('polyline')) {
+
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
                 }
                 if (svg.remember('elementStretchNorth')) {
                     const element = svg.remember('elementStretchNorth');
@@ -238,7 +340,22 @@ const WorkingField = (props) => {
                     props.setActiveElement(activeElement);
                     svg.remember('elementStretchNorth', null);
                     deleteAllEditElements(svg);
-                    createEditElementByElement(svg, activeElement, 8);
+                    if (activeElement.id().includes('polyline')) {
+
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
+                }
+
+                if (svg.remember('elementPath')) {
+                    const element = svg.remember('elementPath');
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.attr({
+                        d: element.path.attr('d')
+                    });
+                    svg.remember('elementPath', null);
+                    deleteAllEditElements(svg);
+                    createEditPathElementByElement(svg, activeElement, 8);
                 }
             }
         })
@@ -251,25 +368,77 @@ const WorkingField = (props) => {
                             //TODO
                         } else {
                             const activeElement = svg.findOne('#' + event.target.id);
-                            deleteAllEditElements(svg);
                             svg.remember('activeElement', activeElement);
                             props.setSelectedIndex(activeElement.id());
                             props.setActiveElement(activeElement);
-                            createEditElementByElement(svg, activeElement, 8);
                         }
                     } else {
                         const activeElement = svg.findOne('#' + event.target.id);
                         svg.remember('activeElement', activeElement);
                         props.setSelectedIndex(activeElement.id());
                         props.setActiveElement(activeElement);
-                        createEditElementByElement(svg, activeElement, 8);
                     }
                 } else {
                     if (svg.remember('activeElement')) {
-                        deleteAllEditElements(svg);
                         svg.remember('activeElement', null);
                         props.setActiveElement(null);
                         props.setSelectedIndex(0);
+                    }
+                }
+            }
+            if (props.activeTool === "shift") {
+                if (event.target.id) {
+                    if (svg.remember('activeElement')) {
+                        if (event.target.id.includes('editElement')) {
+                            //TODO
+                        } else {
+                            const activeElement = svg.findOne('#' + event.target.id);
+                            svg.remember('activeElement', activeElement);
+                            props.setSelectedIndex(activeElement.id());
+                            props.setActiveElement(activeElement);
+                        }
+                    } else {
+                        const activeElement = svg.findOne('#' + event.target.id);
+                        svg.remember('activeElement', activeElement);
+                        props.setSelectedIndex(activeElement.id());
+                        props.setActiveElement(activeElement);
+                    }
+                } else {
+                    if (svg.remember('activeElement')) {
+                        svg.remember('activeElement', null);
+                        props.setActiveElement(null);
+                        props.setSelectedIndex(0);
+                    }
+                }
+            }
+
+            if (props.activeTool === "polyline") {
+                if (props.activeTool === 'polyline') {
+                    if (svg.remember('element')) {
+                        const element = svg.remember("element");
+                        const array = pathArray;
+
+                        array.push(['L', event.offsetX, event.offsetY]);
+                        setPathArray(array);
+
+                        element.attr({
+                            d: arrayToString(array)
+                        })
+                    } else {
+                        const array = new Array([
+                            ['M', event.offsetX, event.offsetY],
+                            ['L', event.offsetX + 1, event.offsetY + 1]
+                        ])
+                        setPathArray(array);
+                        const element = svg.path(array)
+                            .stroke({color: '#000000', opacity: 1, width: 2})
+                            .attr({
+                                id: 'polyline' + createId,
+                                fill: 'none'
+                            });
+                        props.setElements([...props.elements, {id: element.id(), active: false, type: element.type}]);
+                        setCreateId(createId + 1);
+                        svg.remember('element', element);
                     }
                 }
             }
@@ -286,10 +455,26 @@ const WorkingField = (props) => {
             deleteAllEditElements(svg);
             svg.remember('activeElement', activeElement);
             props.setActiveElement(activeElement);
-            createEditElementByElement(svg, activeElement, 8);
+
+            switch (props.activeTool) {
+                case "cursor":
+                    if (activeElement.id().includes('polyline')) {
+                        createEditPathElementByElement(svg, activeElement, 8);
+                    } else {
+                        createEditElementByElement(svg, activeElement, 8)
+                    }
+                    break;
+                case "shift":
+                    createMoveElementByElement(svg, activeElement);
+                    break;
+                default:
+            }
+
+        } else {
+            deleteAllEditElements(svg);
         }
 
-    }, [createId, props, props.activeTool, props.selectedIndex]);
+    }, [createId, pathArray, props]);
 
     const workPlaceStyle = "w-[" + pageSize.width + "px] h-[" + pageSize.height + "px] border bg-white drop-shadow-md";
     const viewBox = "0 0 " + pageSize.width + " " + pageSize.height;

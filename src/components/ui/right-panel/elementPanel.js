@@ -1,6 +1,7 @@
 import {Box, List} from "@mui/material";
 import {BiRectangle} from "react-icons/bi";
-import {BsCircle} from "react-icons/bs";
+import {BsCircle, BsDashLg} from "react-icons/bs";
+import {FaDrawPolygon, FaBezierCurve} from "react-icons/fa";
 import ElementList from "./elementList";
 import {useEffect} from "react";
 
@@ -36,6 +37,9 @@ const ElementPanel = props => {
                     <ElementList key={element.id} text={element.id} selectedIndex={selectedIndex} setSelectedIndex={setSelectedIndex}>
                         {element.type === 'rect' && <BiRectangle/>}
                         {element.type === 'ellipse' && <BsCircle/>}
+                        {element.type === 'line' && <BsDashLg/>}
+                        {element.type === 'path' && <FaBezierCurve/>}
+                        {element.type === 'polygon' && <FaDrawPolygon/>}
                     </ElementList>
                 )}
 

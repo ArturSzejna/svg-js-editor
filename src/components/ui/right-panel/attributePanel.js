@@ -29,11 +29,11 @@ const AttributePanel = ({activeElement, setActiveElement}) => {
             input: <Input name={"fill"} type={"color"} value={fill} onchange={e => setFill(e.target.value)}/>
         },
         {
-            types: ['rect', 'ellipse'],
+            types: ['rect', 'ellipse', 'line', 'path'],
             input: <Input name={"stroke"} type={"color"} value={stroke} onchange={e => setStroke(e.target.value)}/>
         },
         {
-            types: ['rect', 'ellipse'],
+            types: ['rect', 'ellipse', 'line', 'path'],
             input: <Input name={"stroke width"} type={"number"} value={strokeWidth}
                           onchange={e => setStrokeWidth(e.target.value)}/>
         }
