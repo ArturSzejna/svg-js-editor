@@ -11,7 +11,7 @@ export const stringToArray = (d) => {
     let pathArray = [];
     let tab;
     d.split(' ').forEach(element => {
-        if (element === "M" || element === "L"){
+        if (element === "M" || element === "L" || element === "Q"){
             if (tab) pathArray.push(tab);
             tab = [];
             tab.push(element);

@@ -9,6 +9,21 @@ export const createEditElementByElement = (svg, element, r) => {
         class: 'rect'
     }).transform(element.transform());
 
+    svg.line(bbox.x + bbox.width, bbox.y + bbox.height / 2, bbox.x + bbox.width + 25, bbox.y + bbox.height / 2).attr({
+        stroke: 'rgba(121,190,215,0.5)',
+        strokeWidth: 1,
+        id: 'editElement-line',
+        class: 'line'
+    }).transform(element.transform());
+
+    svg.circle(r+2).move(bbox.x-r/2-1 + bbox.width + 25, bbox.y-r/2-1 + bbox.height / 2).attr({
+        fill: "#ffffff",
+        stroke: "#132d28",
+        cursor: "alias",
+        id: 'editElement-rotate',
+        class: 'circle'
+    }).transform(element.transform());
+
     svg.circle(r).move(bbox.x - r / 2 + bbox.width, bbox.y - r / 2 + bbox.height / 2).attr({
         fill: "#ffffff",
         stroke: "#132d28",
@@ -83,13 +98,6 @@ export const createMoveElementByElement = (svg, element, r) => {
         class: 'rect'
     }).transform(element.transform());
 
-    svg.line(bbox.x + bbox.width, bbox.y + bbox.height / 2, bbox.x + bbox.width + 25, bbox.y + bbox.height / 2).attr({
-        stroke: 'rgba(121,190,215,0.5)',
-        strokeWidth: 1,
-        id: 'editElement-line',
-        class: 'line'
-    }).transform(element.transform());
-
     svg.circle(r + 2).move(bbox.x - r / 2 - 1 + bbox.width + 25, bbox.y - r / 2 - 1 + bbox.height / 2).attr({
         fill: "#ffffff",
         stroke: "#132d28",
@@ -100,7 +108,6 @@ export const createMoveElementByElement = (svg, element, r) => {
 }
 export const createEditPathElementByElement = (svg, element, r) => {
     const array = stringToArray(element.attr('d'));
-    console.log(array);
 
     svg.path(array).stroke({color: '#FFBE00FF', opacity: 1, width: 2}).attr({
         fill: 'none',
@@ -111,17 +118,40 @@ export const createEditPathElementByElement = (svg, element, r) => {
     let index = 0;
 
     array.forEach(element => {
-        svg.circle(r).stroke({color: '#132d28', opacity: 1, width: 2})
-            .cx(element[1]).cy(element[2])
-            .attr({
-                fill: "#e3e3e3",
-                    cursor: "grab",
-                    id: 'editElement-point-'+ index,
-                    class: 'point'
-            });
+        switch (element[0]){
+            case 'M':
+            case "L":
+                svg.circle(r).stroke({color: '#132d28', opacity: 1, width: 2})
+                    .cx(element[1]).cy(element[2])
+                    .attr({
+                        fill: "#e3e3e3",
+                        cursor: "grab",
+                        id: 'editElement-point-' + index + '-moveto',
+                        class: 'point'
+                    });
+                break;
+            case 'Q':
+                svg.circle(r).stroke({color: '#132d28', opacity: 1, width: 2})
+                    .cx(element[3]).cy(element[4])
+                    .attr({
+                        fill: "#e3e3e3",
+                        cursor: "grab",
+                        id: 'editElement-point-' + index + '-curveto-end',
+                        class: 'point'
+                    });
+                svg.circle(r-2).stroke({color: '#132d28', opacity: 1, width: 2})
+                    .cx(element[1]).cy(element[2])
+                    .attr({
+                        fill: "#fdc1c1",
+                        cursor: "grab",
+                        id: 'editElement-point-' + index + '-curveto-center',
+                        class: 'point'
+                    });
+                break;
+            default:
+        }
         index++;
     })
-
 }
 
 export const deleteAllEditElements = (svg) => {

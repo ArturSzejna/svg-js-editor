@@ -27,7 +27,10 @@ const InfoPanel = (props) => {
             {/*    backgroundColor: '#dadada'*/}
             {/*}} />*/}
             <AttributePanel activeElement={activeElement}
-                            setActiveElement={setActiveElement}/>
+                            setActiveElement={setActiveElement}
+                            elementList={elementList}
+                            setElementList={setElementList}
+                            setSelectedIndex={setSelectedIndex}/>
         </Box>
     )
 }

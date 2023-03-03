@@ -1,0 +1,8 @@
+<svg width="500" height="600" viewBox="0 0 500 600" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs">
+    <path d="M 18 229 Q 123.5 230 229 231 Q 228.5 125.5 228 20 Q 258.5 20 289 20 Q 290.5 125.5 292 231 Q 389 231 486 231 Q 486 261 486 291 Q 388.5 290 291 289 Q 292.5 410.5 294 532 Q 264.5 532 235 532 Q 233 410.5 231 289 Q 124 288 17 287 Q 18 258.5 19 230 " stroke-opacity="1" stroke-width="2" stroke="#000000" id="polyline1250" fill="none"></path>
+    <path d="M 10 275 Q 250.5 276 491 277 " stroke-opacity="1" stroke-width="3" stroke="#fe0606" id="polyline1252" fill="none"></path>
+    <path d="M 490 239 Q 250 239 10 239 " stroke-opacity="1" stroke-width="3" stroke="#35de38" id="polyline1253" fill="none"></path>
+    <path d="M 240 11 Q 244 284 248 557 " stroke-opacity="1" stroke-width="2" stroke="#fb804b" id="polyline1255" fill="none"></path>
+    <path d="M 282 554 Q 278.5 281 275 8 " stroke-opacity="1" stroke-width="1" stroke="#7276e9" id="polyline1256" fill="none"></path>
+    <path d="M 287 552 Q 285.5 420.5 284 289 Q 289 286 294 283 Q 392 282.5 490 282 " stroke-opacity="1" stroke-width="2" stroke="#000000" id="polyline1257" fill="none"></path>
+</svg>

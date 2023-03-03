@@ -50,8 +50,8 @@ const Toolbar = (props) => {
                 <BsDashLg/>
             </ToolbarButton>
             <ToolbarButton
-                active={props.activeTool === "curve"}
-                click={() => props.click(props.activeTool !== "curve" ? "curve" : null)}>
+                active={props.activeTool === "path"}
+                click={() => props.click(props.activeTool !== "path" ? "path" : null)}>
                 <FaBezierCurve/>
             </ToolbarButton>
             <ToolbarButton

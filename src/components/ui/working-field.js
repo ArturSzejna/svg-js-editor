@@ -1,5 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import {Array, SVG} from "@svgdotjs/svg.js";
+import {parse} from "svg-parser";
 
 import {moveElement, rotateElement} from '../helper/editing-helper';
 
@@ -9,14 +10,17 @@ import {
     createMoveElementByElement,
     deleteAllEditElements,
     deleteCircleElements,
-    deleteLineElements
+    deleteLineElements,
+    deletePointElements
 } from '../helper/creating-helper';
 import {arrayToString} from "../helper/helper";
+import elementList from "./right-panel/elementList";
 
 const WorkingField = (props) => {
 
     const svgRef = useRef(null);
 
+    const [svgTree, setSvgTree] = useState(null);
     const [pageSize, setPageSize] = useState({
         width: 500,
         height: 600
@@ -27,7 +31,46 @@ const WorkingField = (props) => {
     const [pathArray, setPathArray] = useState(null);
 
     useEffect(() => {
+        console.log(props.elements);
+    }, [props.elements]);
+
+    useEffect(() => {
         const svg = SVG(svgRef.current);
+
+        if (svgTree) {
+
+            svg.children().remove();
+
+            const children = svgTree.children;
+
+            children.forEach(child => {
+                if (child.tagName === "svg") {
+                    setPageSize({
+                        width: child.properties.width,
+                        height: child.properties.height
+                    })
+                    child.children.forEach(child => {
+                        if (child.tagName === "path") {
+                            console.log(child.properties);
+                            const elementToSave = {id: child.properties.id, active: false, type: child.tagName}
+                            console.log(elementToSave);
+                            props.setElements([...props.elements, elementToSave]); //TODO Correct the display of items in the list. Adds the last item!!!
+                            setCreateId(createId + 1);
+                            svg.path().fill(child.properties.fill).stroke({
+                                color: child.properties.stroke,
+                                opacity: child.properties['stroke-opacity'],
+                                width: child.properties['stroke-width']
+                            }).attr({
+                                d: child.properties.d,
+                                id: child.properties.id
+                            })
+                        }
+                    })
+                }
+                console.log(child.tagName);
+            });
+            setSvgTree(null);
+        }
 
         svg.off();
 
@@ -77,15 +120,31 @@ const WorkingField = (props) => {
                             if (event.target.id.includes('north')) svg.remember('elementStretchNorth', svg.findOne('.rect'));
                         }
 
-                        if (event.target.id.includes('point')) {
-
-                            svg.remember('elementPath', {
+                        if (event.target.id.includes('moveto')) {
+                            console.log(event.target.id);
+                            svg.remember('elementPath-moveto', {
                                 path: svg.findOne('.path'),
                                 index: event.target.id.split('-')[2]
                             })
                         }
+                        if (event.target.id.includes('curveto-center')) {
+                            console.log(event.target.id);
+                            svg.remember('elementPath-curveto-center', {
+                                path: svg.findOne('.path'),
+                                index: event.target.id.split('-')[2]
+                            })
+                        }
+                        if (event.target.id.includes('curveto-end')) {
+                            console.log(event.target.id);
+                            svg.remember('elementPath-curveto-end', {
+                                path: svg.findOne('.path'),
+                                index: event.target.id.split('-')[2]
+                            })
+                        }
+
                         deleteCircleElements(svg);
                         deleteLineElements(svg);
+                        deletePointElements(svg);
                     }
                 }
             }
@@ -130,7 +189,23 @@ const WorkingField = (props) => {
                     const element = svg.remember("element");
                     const array = pathArray;
 
-                    array[array.length - 1] = ['L', event.offsetX, event.offsetY];
+                    const prevElement = array[array.length - 2];
+
+                    let cx, cy;
+
+                    switch (prevElement[0]) {
+                        case 'M':
+                            cx = (event.offsetX - prevElement[1]) / 2 + prevElement[1];
+                            cy = (event.offsetY - prevElement[2]) / 2 + prevElement[2];
+                            break;
+                        case'Q':
+                            cx = (event.offsetX - prevElement[3]) / 2 + prevElement[3];
+                            cy = (event.offsetY - prevElement[4]) / 2 + prevElement[4];
+                            break;
+                        default:
+                    }
+
+                    array[array.length - 1] = ['Q', cx, cy, event.offsetX, event.offsetY];
                     setPathArray(array);
 
                     element.attr({
@@ -219,8 +294,8 @@ const WorkingField = (props) => {
                     }).height(height);
                 }
 
-                if (svg.remember('elementPath')) {
-                    const element = svg.remember('elementPath');
+                if (svg.remember('elementPath-moveto')) {
+                    const element = svg.remember('elementPath-moveto');
                     const path = element.path;
                     const array = path._array;
                     array[element.index][1] = event.offsetX;
@@ -228,9 +303,26 @@ const WorkingField = (props) => {
                     path.attr({
                         d: arrayToString(array)
                     })
-                        console.log(array[element.index]);
-
-
+                }
+                if (svg.remember('elementPath-curveto-center')) {
+                    const element = svg.remember('elementPath-curveto-center');
+                    const path = element.path;
+                    const array = path._array;
+                    array[element.index][1] = event.offsetX;
+                    array[element.index][2] = event.offsetY;
+                    path.attr({
+                        d: arrayToString(array)
+                    })
+                }
+                if (svg.remember('elementPath-curveto-end')) {
+                    const element = svg.remember('elementPath-curveto-end');
+                    const path = element.path;
+                    const array = path._array;
+                    array[element.index][3] = event.offsetX;
+                    array[element.index][4] = event.offsetY;
+                    path.attr({
+                        d: arrayToString(array)
+                    })
                 }
             }
         })
@@ -347,13 +439,33 @@ const WorkingField = (props) => {
                     }
                 }
 
-                if (svg.remember('elementPath')) {
-                    const element = svg.remember('elementPath');
+                if (svg.remember('elementPath-moveto')) {
+                    const element = svg.remember('elementPath-moveto');
                     const activeElement = svg.remember('activeElement');
                     activeElement.attr({
                         d: element.path.attr('d')
                     });
-                    svg.remember('elementPath', null);
+                    svg.remember('elementPath-moveto', null);
+                    deleteAllEditElements(svg);
+                    createEditPathElementByElement(svg, activeElement, 8);
+                }
+                if (svg.remember('elementPath-curveto-center')) {
+                    const element = svg.remember('elementPath-curveto-center');
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.attr({
+                        d: element.path.attr('d')
+                    });
+                    svg.remember('elementPath-curveto-center', null);
+                    deleteAllEditElements(svg);
+                    createEditPathElementByElement(svg, activeElement, 8);
+                }
+                if (svg.remember('elementPath-curveto-end')) {
+                    const element = svg.remember('elementPath-curveto-end');
+                    const activeElement = svg.remember('activeElement');
+                    activeElement.attr({
+                        d: element.path.attr('d')
+                    });
+                    svg.remember('elementPath-curveto-end', null);
                     deleteAllEditElements(svg);
                     createEditPathElementByElement(svg, activeElement, 8);
                 }
@@ -413,33 +525,32 @@ const WorkingField = (props) => {
             }
 
             if (props.activeTool === "polyline") {
-                if (props.activeTool === 'polyline') {
-                    if (svg.remember('element')) {
-                        const element = svg.remember("element");
-                        const array = pathArray;
+                if (svg.remember('element')) {
+                    const element = svg.remember("element");
+                    const array = pathArray;
 
-                        array.push(['L', event.offsetX, event.offsetY]);
-                        setPathArray(array);
+                    array.push(['L', event.offsetX, event.offsetY]);
+                    setPathArray(array);
 
-                        element.attr({
-                            d: arrayToString(array)
-                        })
-                    } else {
-                        const array = new Array([
-                            ['M', event.offsetX, event.offsetY],
-                            ['L', event.offsetX + 1, event.offsetY + 1]
-                        ])
-                        setPathArray(array);
-                        const element = svg.path(array)
-                            .stroke({color: '#000000', opacity: 1, width: 2})
-                            .attr({
-                                id: 'polyline' + createId,
-                                fill: 'none'
-                            });
-                        props.setElements([...props.elements, {id: element.id(), active: false, type: element.type}]);
-                        setCreateId(createId + 1);
-                        svg.remember('element', element);
-                    }
+                    element.attr({
+                        d: arrayToString(array)
+                    })
+                } else {
+                    const array = new Array([
+                        ['M', event.offsetX, event.offsetY],
+                        ['Q', event.offsetX + 1, event.offsetY + 1, event.offsetX + 2, event.offsetY + 2]
+                    ])
+                    setPathArray(array);
+                    const element = svg.path(array)
+                        .stroke({color: '#000000', opacity: 1, width: 2})
+                        .attr({
+                            id: 'polyline' + createId,
+                            fill: 'none'
+                        });
+
+                    props.setElements([...props.elements, {id: element.id(), active: false, type: element.type}]);
+                    setCreateId(createId + 1);
+                    svg.remember('element', element);
                 }
             }
         })
@@ -474,7 +585,7 @@ const WorkingField = (props) => {
             deleteAllEditElements(svg);
         }
 
-    }, [createId, pathArray, props]);
+    }, [createId, pathArray, props, svgTree]);
 
     const workPlaceStyle = "w-[" + pageSize.width + "px] h-[" + pageSize.height + "px] border bg-white drop-shadow-md";
     const viewBox = "0 0 " + pageSize.width + " " + pageSize.height;
@@ -497,6 +608,10 @@ const WorkingField = (props) => {
                 <svg ref={svgRef} width={pageSize.width} height={pageSize.height} viewBox={viewBox}>
 
                 </svg>
+            </div>
+            <div className="flex flex-row absolute bottom-0 left-[50%-30px] z-10">
+                <input type={"file"} className="border m-1 pl-1" accept=".svg"
+                       onChange={event => event.target.files[0].text().then(text => setSvgTree(parse(text)))}/>
             </div>
         </div>
     )

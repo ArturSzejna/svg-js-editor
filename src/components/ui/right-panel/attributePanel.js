@@ -1,8 +1,8 @@
 import Input from "../model/input";
 import {Fragment, useEffect, useState} from "react";
-import {Box} from "@mui/material";
+import {Box, Button} from "@mui/material";
 
-const AttributePanel = ({activeElement, setActiveElement}) => {
+const AttributePanel = ({activeElement, setActiveElement, elementList, setElementList, setSelectedIndex}) => {
 
     const [fill, setFill] = useState('#ffffff');
     const [stroke, setStroke] = useState('#000000');
@@ -57,6 +57,29 @@ const AttributePanel = ({activeElement, setActiveElement}) => {
                         if (type === activeElement.type)
                             return inputElement.input;
                     }))}
+                    <Box sx={{
+                        width: '100%',
+                        gap: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'end',
+                    }}>
+                        <Button onClick={() => {
+                            const newElementList = elementList.filter(element => element.id !== activeElement.id());
+                            setElementList(newElementList);
+                            setSelectedIndex(0)
+                            activeElement.remove();
+                        }}
+                            sx={{
+                            backgroundColor: '#ec1212',
+                            color: '#ffffff',
+                            '&:hover': {
+                                backgroundColor: '#fd3434',
+                            },
+                        }}>
+                            Usuń
+                        </Button>
+                    </Box>
                 </Fragment>
                 : <span>Zaznacz element aby edytować</span>}
         </Box>
