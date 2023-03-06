@@ -10,14 +10,16 @@ function App() {
     const [activeElement, setActiveElement] = useState(null);
     const [elements, setElements] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [svgTree, setSvgTree] = useState(null);
 
     useEffect(() => {
-
+        console.log(elements);
     }, [elements])
 
     return (
         <SvgEdytor>
             <Toolbar activeTool={activeTool}
+                     setSvgTree={setSvgTree}
                      click={tool => setActiveTool(tool)}/>
 
             <WorkingField activeTool={activeTool}
@@ -29,7 +31,9 @@ function App() {
                           selectedIndex={selectedIndex}
                           setSelectedIndex={setSelectedIndex}
                           width={650}
-                          height={650}/>
+                          height={650}
+                          svgTree={svgTree}
+                          setSvgTree={setSvgTree}/>
 
             <InfoPanel activeTool={activeTool}
                        setActiveTool={setActiveTool}

@@ -1,7 +1,9 @@
 import ToolbarButton from "../model/toolbar-button";
+import ToolbarLoadButton from "../model/toolbar-load-button";
+import ToolbarDownloadButton from "../model/toolbar-download-button";
 
 import {BsCircle, BsCursor, BsDashLg} from 'react-icons/bs';
-import {FaDrawPolygon, FaBezierCurve} from 'react-icons/fa';
+import {FaDrawPolygon, FaBezierCurve, FaFileUpload, FaFileDownload} from 'react-icons/fa';
 import {BiRectangle, BiMove} from "react-icons/bi";
 
 import {Box, Divider} from "@mui/material";
@@ -41,18 +43,10 @@ const Toolbar = (props) => {
                 click={() => props.click(props.activeTool !== "circle" ? "circle" : null)}>
                 <BsCircle/>
             </ToolbarButton>
-
-            <Divider />
-
             <ToolbarButton
                 active={props.activeTool === "line"}
                 click={() => props.click(props.activeTool !== "line" ? "line" : null)}>
                 <BsDashLg/>
-            </ToolbarButton>
-            <ToolbarButton
-                active={props.activeTool === "path"}
-                click={() => props.click(props.activeTool !== "path" ? "path" : null)}>
-                <FaBezierCurve/>
             </ToolbarButton>
             <ToolbarButton
                 active={props.activeTool === "polyline"}
@@ -60,11 +54,23 @@ const Toolbar = (props) => {
                 <FaBezierCurve/>
             </ToolbarButton>
 
+            <Divider />
+
             <ToolbarButton
                 active={props.activeTool === "polygon"}
                 click={() => props.click(props.activeTool !== "polygon" ? "polygon" : null)}>
                 <FaDrawPolygon/>
             </ToolbarButton>
+
+            <Divider />
+
+            <ToolbarLoadButton
+                setSvgTree={props.setSvgTree}>
+                <FaFileUpload/>
+            </ToolbarLoadButton>
+            <ToolbarDownloadButton>
+                <FaFileDownload/>
+            </ToolbarDownloadButton>
 
         </Box>
     )

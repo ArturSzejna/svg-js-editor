@@ -1,8 +1,9 @@
 import {useEffect, useRef, useState} from "react";
 import {Array, SVG} from "@svgdotjs/svg.js";
-import {parse} from "svg-parser";
 
 import {moveElement, rotateElement} from '../helper/editing-helper';
+import {arrayToString, getRandomInt} from "../helper/helper";
+import { createElements } from "../helper/load-elements";
 
 import {
     createEditElementByElement,
@@ -13,63 +14,44 @@ import {
     deleteLineElements,
     deletePointElements
 } from '../helper/creating-helper';
-import {arrayToString} from "../helper/helper";
-import elementList from "./right-panel/elementList";
 
 const WorkingField = (props) => {
 
     const svgRef = useRef(null);
 
-    const [svgTree, setSvgTree] = useState(null);
     const [pageSize, setPageSize] = useState({
         width: 500,
         height: 600
     });
-
-    const [createId, setCreateId] = useState(1245);
-
     const [pathArray, setPathArray] = useState(null);
-
-    useEffect(() => {
-        console.log(props.elements);
-    }, [props.elements]);
 
     useEffect(() => {
         const svg = SVG(svgRef.current);
 
-        if (svgTree) {
-
+        if (props.svgTree) {
+            console.log(props.svgTree);
             svg.children().remove();
+            props.setElements(props.elements.splice(0, props.elements.length));
 
-            const children = svgTree.children;
-
-            children.forEach(child => {
+            props.svgTree.children.forEach(child => {
                 if (child.tagName === "svg") {
                     setPageSize({
                         width: child.properties.width,
                         height: child.properties.height
                     })
-                    child.children.forEach(child => {
-                        if (child.tagName === "path") {
-                            console.log(child.properties);
-                            const elementToSave = {id: child.properties.id, active: false, type: child.tagName}
-                            console.log(elementToSave);
-                            props.setElements([...props.elements, elementToSave]); //TODO Correct the display of items in the list. Adds the last item!!!
-                            setCreateId(createId + 1);
-                            svg.path().fill(child.properties.fill).stroke({
-                                color: child.properties.stroke,
-                                opacity: child.properties['stroke-opacity'],
-                                width: child.properties['stroke-width']
-                            }).attr({
-                                d: child.properties.d,
-                                id: child.properties.id
-                            })
-                        }
-                    })
+                    
+                    createElements(svg, child.children);
+
+                    child.children.forEach(element => {
+                        props.setElements(props.elements.push({
+                            id: element.properties.id,
+                            active: false,
+                            type: element.tagName
+                        }));
+                    })}
                 }
-                console.log(child.tagName);
-            });
-            setSvgTree(null);
+            );
+            props.setSvgTree(null);
         }
 
         svg.off();
@@ -82,18 +64,18 @@ const WorkingField = (props) => {
                     switch (props.activeTool) {
                         case 'rectangle':
                             element = svg.rect(10, 10).move(event.offsetX, event.offsetY).attr({
-                                id: 'rect' + createId
+                                id: 'rect-' + getRandomInt(9999999)
                             });
                             break;
                         case 'circle':
                             element = svg.ellipse(5, 5).move(event.offsetX, event.offsetY).width(5).height(5).attr({
-                                id: 'ellipse' + createId
+                                id: 'ellipse-' + getRandomInt(9999999)
                             });
                             break;
                         case 'line':
                             element = svg.line(event.offsetX, event.offsetY, event.offsetX + 1, event.offsetY + 1)
                                 .stroke({color: '#000000', opacity: 1, width: 4})
-                                .attr({id: 'line' + createId});
+                                .attr({id: 'line-' + getRandomInt(9999999)});
                             break;
                         default:
                     }
@@ -103,8 +85,6 @@ const WorkingField = (props) => {
                         fill: "rgba(161,230,255,0.5)",
                         stroke: "rgba(121,190,215,0.5)",
                     })
-                    // element.remember("active", false);
-                    setCreateId(createId + 1);
                     svg.remember('element', element);
                 }
                 if (props.activeTool === 'cursor' || props.activeTool === 'shift') {
@@ -169,7 +149,7 @@ const WorkingField = (props) => {
         })
 
         svg.on('mousemove', event => {
-            if (props.activeTool === 'rectangle' || props.activeTool === 'circle' || props.activeTool === 'line') {
+            if (props.activeTool === 'rectangle' || props.activeTool === 'circle' ) {
                 if (svg.remember("element")) {
                     const element = svg.remember("element");
                     const bbox = element.bbox();
@@ -181,6 +161,16 @@ const WorkingField = (props) => {
                     else height = 1;
 
                     element.width(width).height(height);
+                }
+            }
+
+            if (props.activeTool === 'line') {
+                if (svg.remember("element")) {
+                    const element = svg.remember("element");
+                    element.attr({
+                        x2: event.offsetX,
+                        y2: event.offsetY
+                    })
                 }
             }
 
@@ -544,12 +534,11 @@ const WorkingField = (props) => {
                     const element = svg.path(array)
                         .stroke({color: '#000000', opacity: 1, width: 2})
                         .attr({
-                            id: 'polyline' + createId,
+                            id: 'polyline' + getRandomInt(9999999),
                             fill: 'none'
                         });
 
                     props.setElements([...props.elements, {id: element.id(), active: false, type: element.type}]);
-                    setCreateId(createId + 1);
                     svg.remember('element', element);
                 }
             }
@@ -580,12 +569,10 @@ const WorkingField = (props) => {
                     break;
                 default:
             }
-
         } else {
             deleteAllEditElements(svg);
         }
-
-    }, [createId, pathArray, props, svgTree]);
+    }, [pathArray, props]);
 
     const workPlaceStyle = "w-[" + pageSize.width + "px] h-[" + pageSize.height + "px] border bg-white drop-shadow-md";
     const viewBox = "0 0 " + pageSize.width + " " + pageSize.height;
@@ -604,14 +591,8 @@ const WorkingField = (props) => {
                            height: e.target.value
                        })}/>
             </div>
-            <div className={workPlaceStyle}>
-                <svg ref={svgRef} width={pageSize.width} height={pageSize.height} viewBox={viewBox}>
-
-                </svg>
-            </div>
-            <div className="flex flex-row absolute bottom-0 left-[50%-30px] z-10">
-                <input type={"file"} className="border m-1 pl-1" accept=".svg"
-                       onChange={event => event.target.files[0].text().then(text => setSvgTree(parse(text)))}/>
+            <div name="svg" className={workPlaceStyle}>
+                <svg ref={svgRef} width={pageSize.width} height={pageSize.height} viewBox={viewBox}></svg>
             </div>
         </div>
     )
